@@ -1,92 +1,56 @@
 # **Finding Lane Lines on the Road** 
+[![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
 
-[//]: # (Image References)
+<img src="examples/laneLines_thirdPass.jpg" width="480" alt="Combined Image" />
 
-[image1]: ./examples/grayscale.jpg "Grayscale"
-
+Overview
 ---
 
-### Pipeline reflection
+When we drive, we use our eyes to decide where to go.  The lines on the road that show us where the lanes are act as our constant reference for where to steer the vehicle.  Naturally, one of the first things we would like to do in developing a self-driving car is to automatically detect lane lines using an algorithm.
 
-In the first instance the incoming line array will be checked squeezed for easier data manipulation by indicies
+In this project you will detect lane lines in images using Python and OpenCV.  OpenCV means "Open-Source Computer Vision", which is a package that has many useful tools for analyzing images.  
 
-    # remove unwanted dim [[[]]] --> [[]]
-    lines = np.squeeze(lines)
+To complete the project, two files will be submitted: a file containing project code and a file containing a brief write up explaining your solution. We have included template files to be used both for the [code](https://github.com/udacity/CarND-LaneLines-P1/blob/master/P1.ipynb) and the [writeup](https://github.com/udacity/CarND-LaneLines-P1/blob/master/writeup_template.md).The code file is called P1.ipynb and the writeup template is writeup_template.md 
 
-Afterwards the slope *((y2-y1)/(x2-x1))* is calculated as a combination of subtractions and divisions. The result will be appended as an additional column to the line array
-
-    # calculate slope
-    result = np.expand_dims(np.array((lines[:, 3] - lines[:, 1]) / (lines[:, 2] - lines[:, 0])), axis=1)
-    lines = np.append(lines, result, axis=1)
-
-The left line is seperated by the right one by filtering the array with the slope significant
-
-    # get left and right
-    side_filter = lines[:, -1] < 0
-    left = lines[~side_filter]
-    right = lines[side_filter]
-
-Because the operation is similar for both side we pass the filtered arrays to a new method *get_line_for_side()*
-
-    # get single line from avarage or median and plot it on the image
-    get_line_for_side(img, left, mode, color, thickness)
-    get_line_for_side(img, right, mode, color, thickness)
-
-This function checks if data is within the array before calculating anything
-    # bounding check
-    if len(lines) == 0 or lines.shape[0] == 0 or lines.shape[1] != 5:
-        print("[Draw Lines] No lines detected, skip")
-        return
-
-    # get image shape
-    img_shape = img.shape
-    slope = point_x2 = point_y2 = 0.
-Given by the user choice the average or the median of the points and slopes, could be processed
-
-    if mode == 0:
-        point_x2 = np.median(lines[:, 2])
-        point_y2 = np.median(lines[:, 3])
-        slope = np.median(lines[:, -1])
-    if mode == 1:
-        point_x2 = np.average(lines[:, 2])
-        point_y2 = np.average(lines[:, 3])
-        slope = np.average(lines[:, -1])
-
-Based on the formula y = mx + c the missing c is calculated. If the values is out of bounds or not a number we will skip this call
-
-    # get c offset in y = mx + c --> c = y - (mx)
-    c = point_y2 - (slope * point_x2)
-
-    # catch out of bound values 
-    if np.isnan(c) or np.isinf(c) or np.isnan(slope) or np.isinf(slope) :
-        print(f"[Draw Lines] Slope or c is infinity [s={slope}, c ={c}]")
-        print(lines)
-        print("================================")
-        return
-
-Because we need a slice of the line within the image region we cut the line in the y axis scale from the bottom to a given ratio of the y axis.
-
-    # calculate x by given y  x = (y - c)/m
-    point_bot = np.array([(img_shape[0] - c) / slope, img_shape[0]], dtype=np.int32)
-    point_top = np.array([((img_shape[0] * (1 - region_top_ratio)) - c) / slope, img_shape[0] * (1 - region_top_ratio)], dtype=np.int32)
-
-At the end the line is drawn onto the image with a given color and thickness.
-
-    cv2.line(img, (point_bot[0], point_bot[1]), (point_top[0], point_top[1]), color, thickness)
+To meet specifications in the project, take a look at the requirements in the [project rubric](https://review.udacity.com/#!/rubrics/322/view)
 
 
-### 2. Potential shortcomings with the current pipeline
+Creating a Great Writeup
+---
+For this project, a great writeup should provide a detailed response to the "Reflection" section of the [project rubric](https://review.udacity.com/#!/rubrics/322/view). There are three parts to the reflection:
+
+1. Describe the pipeline
+
+2. Identify any shortcomings
+
+3. Suggest possible improvements
+
+We encourage using images in your writeup to demonstrate how your pipeline works.  
+
+All that said, please be concise!  We're not looking for you to write a book here: just a brief description.
+
+You're not required to use markdown for your writeup.  If you use another method please just submit a pdf of your writeup. Here is a link to a [writeup template file](https://github.com/udacity/CarND-LaneLines-P1/blob/master/writeup_template.md). 
 
 
-One potential shortcoming would be what would happen when no lines are detected. In this case nothing is given back to the system. 
+The Project
+---
 
-Another shortcoming could be the change of lighting conditions in the image, so that the predefined values for the hogh transformation will not fit within the chnaged enviroment
+## If you have already installed the [CarND Term1 Starter Kit](https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md) you should be good to go!   If not, you should install the starter kit to get started on this project. ##
 
-This problem also exists with large road segment gaps and defect road painting with small fractions instead of a solid line
+**Step 1:** Set up the [CarND Term1 Starter Kit](https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md) if you haven't already.
 
+**Step 2:** Open the code in a Jupyter Notebook
 
-### 3. Suggest possible improvements to your pipeline
+You will complete the project code in a Jupyter notebook.  If you are unfamiliar with Jupyter Notebooks, check out [Udacity's free course on Anaconda and Jupyter Notebooks](https://classroom.udacity.com/courses/ud1111) to get started.
 
-A possible improvement would be to modify the parameters based on the image brightness.
+Jupyter is an Ipython notebook where you can run blocks of code and see results interactively.  All the code for this project is contained in a Jupyter notebook. To start Jupyter in your browser, use terminal to navigate to your project directory and then run the following command at the terminal prompt (be sure you've activated your Python 3 carnd-term1 environment as described in the [CarND Term1 Starter Kit](https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md) installation instructions!):
 
-Another potential improvement could be to store detected lines from the last image and predict a new position within the new image if no line is detected.
+`> jupyter notebook`
+
+A browser window will appear showing the contents of the current directory.  Click on the file called "P1.ipynb".  Another browser window will appear displaying the notebook.  Follow the instructions in the notebook to complete the project.  
+
+**Step 3:** Complete the project and submit both the Ipython notebook and the project writeup
+
+## How to write a README
+A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
+
